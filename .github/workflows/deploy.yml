@@ -10,28 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy to VM
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} /bin/bash << 'EOF'
-          set -e
-          echo "Connected as: $(whoami)"
-          cd $HOME/deployments/BeYou-main
-          echo "Pulling latest code..."
-          git pull origin main
-          echo "Building containers..."
-          docker-compose build
-          echo "Restarting containers..."
-          docker-compose down
-          docker-compose up -d
-          echo "Deployment completed successfully."
-          EOF
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+            echo "Connected as: $(whoami)"
+            cd $HOME/deployments/BeYou-main
+            echo "Pulling latest code..."
+            git pull origin main
+            echo "Building containers..."
+            docker-compose build
+            echo "Restarting containers..."
+            docker-compose down
+            docker-compose up -d
+            echo "Deployment completed successfully."
