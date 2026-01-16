@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to VM
         run: |
-          ssh ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
             set -e
             cd ~/deployments/BeYou-main
             echo "Pulling latest code..."
