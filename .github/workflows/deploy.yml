@@ -20,17 +20,22 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to VM
+      - name: Connect to VM and navigate to directory
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
-            set -e
-            cd ~/deployments/BeYou-main
-            echo "Pulling latest code..."
-            git pull origin main
-            echo "Building containers..."
-            docker-compose build
-            echo "Restarting containers..."
-            docker-compose down
-            docker-compose up -d
-            echo "Deployment completed successfully."
-          ENDSSH
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "cd ~/deployments/BeYou-main && pwd"
+
+      - name: Pull latest code
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "cd ~/deployments/BeYou-main && git pull origin main"
+
+      - name: Build Docker containers
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "cd ~/deployments/BeYou-main && docker-compose build"
+
+      - name: Restart Docker containers
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "cd ~/deployments/BeYou-main && docker-compose down && docker-compose up -d"
+
+      - name: Verify deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "echo 'Deployment completed successfully.'"
