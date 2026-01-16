@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to VM
         run: |
-          ssh ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
             cd ~/deployments/BeYou-main
 
             echo "Pulling latest code"
@@ -30,13 +30,6 @@ jobs:
 
             echo "Rebuilding containers"
             docker-compose build
-
-            echo "Running migrations"
-            docker-compose run --rm beyou_backend python manage.py makemigrations
-            docker-compose run --rm beyou_backend python manage.py migrate
-
-            echo "Collecting static"
-            docker-compose run --rm beyou_backend python manage.py collectstatic --noinput
 
             echo "Restarting services"
             docker-compose down
