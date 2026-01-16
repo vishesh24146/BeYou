@@ -22,4 +22,4 @@ jobs:
 
       - name: Test connection and list files
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'ls -la'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} bash -c 'ls -la'
