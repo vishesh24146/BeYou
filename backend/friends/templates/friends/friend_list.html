@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0">My Friends</h2>
+                <a href="{% url 'search_users' %}" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Find Friends
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <input type="text" id="friendSearch" class="form-control" placeholder="Search your friends..." onkeyup="filterFriends()">
+            </div>
+
+            {% if friends %}
+                <div class="row" id="friendsList">
+                    {% for friend in friends %}
+                        <div class="col-md-6 mb-3 friend-item">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            {% if friend.profile_picture %}
+                                                <img src="{{ friend.profile_picture.url }}" class="rounded-circle" width="60" height="60" alt="Profile picture">
+                                            {% else %}
+                                                <img src="/static/images/default_profile.png" class="rounded-circle" width="60" height="60" alt="Default profile">
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h5 class="mb-0">
+                                                    <a href="{% url 'profile' username=friend.username %}" class="text-decoration-none">
+                                                        {{ friend.username }}
+                                                    </a>
+                                                </h5>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a class="dropdown-item" href="{% url 'start_conversation' friend.id %}">
+                                                            <i class="fas fa-comment text-primary"></i> Message
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="{% url 'block_user' friend.id %}">
+                                                            <i class="fas fa-ban text-danger"></i> Block User
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'report_user' friend.id %}">
+                                                            <i class="fas fa-flag text-warning"></i> Report User
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">
+                                                {% if friend.is_verified %}
+                                                    <i class="fas fa-check-circle text-primary"></i> Verified
+                                                {% endif %}
+                                            </small>
+                                            {% if friend.bio %}
+                                                <p class="mt-2 mb-0 small text-truncate">{{ friend.bio }}</p>
+                                            {% endif %}
+                                            <div class="mt-2">
+                                                <a href="{% url 'start_conversation' friend.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-comment"></i> Message
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-user-friends fa-4x text-muted"></i>
+                    </div>
+                    <h5>You don't have any friends yet</h5>
+                    <p class="text-muted">Connect with others by sending friend requests</p>
+                    <a href="{% url 'search_users' %}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Find Friends
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function filterFriends() {
+    // Get input value
+    var input = document.getElementById('friendSearch');
+    var filter = input.value.toUpperCase();
+    
+    // Get all friend items
+    var friendItems = document.getElementsByClassName('friend-item');
+    
+    // Loop through friend items
+    for (var i = 0; i < friendItems.length; i++) {
+        var friend = friendItems[i];
+        var username = friend.querySelector('.card-body h5 a').textContent;
+        
+        // Check if the username matches the filter
+        if (username.toUpperCase().indexOf(filter) > -1) {
+            friend.style.display = "";
+        } else {
+            friend.style.display = "none";
+        }
+    }
+}
+</script>
+{% endblock %}

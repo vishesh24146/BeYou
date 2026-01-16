@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>Process Report #{{ report.id }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Report Details</h5>
+                    <table class="table">
+                        <tr>
+                            <th>Type:</th>
+                            <td>{{ report.get_report_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Reported by:</th>
+                            <td>{{ report.reporter.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Reported user:</th>
+                            <td>{{ report.reported_user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Reason:</th>
+                            <td>{{ report.reason }}</td>
+                        </tr>
+                        <tr>
+                            <th>Details:</th>
+                            <td>{{ report.additional_details }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date:</th>
+                            <td>{{ report.created_at }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge {% if report.status == 'pending' %}bg-warning{% elif report.status == 'investigating' %}bg-info{% elif report.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ report.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    {% if report.screenshot %}
+                    <div class="mt-3">
+                        <h5>Evidence/Screenshot:</h5>
+                        <img src="{{ report.screenshot.url }}" class="img-fluid img-thumbnail" alt="Report evidence">
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Reported Content</h5>
+                    
+                    {% if report.report_type == 'user' %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ reported_content.username }}</h5>
+                                <p>Email: {{ reported_content.email }}</p>
+                                <p>Joined: {{ reported_content.date_joined }}</p>
+                                <p>Bio: {{ reported_content.bio|default:"No bio provided." }}</p>
+                                <a href="/admin/users/customuser/{{ reported_content.id }}/change/" class="btn btn-sm btn-primary" target="_blank">
+                                    View in Admin
+                                </a>
+                            </div>
+                        </div>
+                    {% elif report.report_type == 'message' %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Message</h5>
+                                <p><strong>From:</strong> {{ reported_content.sender.username }}</p>
+                                <p><strong>Date:</strong> {{ reported_content.created_at }}</p>
+                                <div class="p-3 bg-light">
+                                    <p>{{ reported_content.decrypt_message }}</p>
+                                    {% if reported_content.is_media_message %}
+                                    <p>
+                                        <strong>Media:</strong> 
+                                        <a href="{{ reported_content.media_file.url }}" target="_blank">
+                                            View {{ reported_content.get_media_type_display }}
+                                        </a>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% elif report.report_type == 'item' %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ reported_content.name }}</h5>
+                                <p><strong>Seller:</strong> {{ reported_content.seller.username }}</p>
+                                <p><strong>Price:</strong> ${{ reported_content.price }}</p>
+                                <p><strong>Description:</strong> {{ reported_content.description|truncatewords:50 }}</p>
+                                {% if reported_content.image %}
+                                <img src="{{ reported_content.image.url }}" class="img-fluid img-thumbnail" alt="{{ reported_content.name }}">
+                                {% endif %}
+                                <a href="{% url 'item_detail' reported_content.id %}" class="btn btn-sm btn-primary" target="_blank">
+                                    View Item
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" class="mt-3">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="admin_notes" class="form-label">Admin Notes:</label>
+                            <textarea name="admin_notes" id="admin_notes" class="form-control" rows="3">{{ report.admin_notes }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Choose Action:</h6>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" name="action" value="investigate" class="btn btn-info">
+                                    Mark as Investigating
+                                </button>
+                                
+                                <button type="submit" name="action" value="dismiss" class="btn btn-secondary">
+                                    Dismiss Report
+                                </button>
+                                
+                                <button type="button" class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#resolveOptions">
+                                    Resolve with Action
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse" id="resolveOptions">
+                            <div class="card card-body mb-3">
+                                <h6>Resolution Options:</h6>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="resolution_type" value="warning" id="resolution_warning">
+                                    <label class="form-check-label" for="resolution_warning">
+                                        Send Warning to User
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="resolution_type" value="ban_temp" id="resolution_ban_temp">
+                                    <label class="form-check-label" for="resolution_ban_temp">
+                                        Temporary Ban
+                                    </label>
+                                    <div class="ms-4">
+                                        <select name="ban_days" class="form-select form-select-sm">
+                                            <option value="1">1 day</option>
+                                            <option value="3">3 days</option>
+                                            <option value="7" selected>7 days</option>
+                                            <option value="14">14 days</option>
+                                            <option value="30">30 days</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="resolution_type" value="ban_perm" id="resolution_ban_perm">
+                                    <label class="form-check-label" for="resolution_ban_perm">
+                                        Permanent Ban
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="resolution_type" value="delete_content" id="resolution_delete">
+                                    <label class="form-check-label" for="resolution_delete">
+                                        Delete Reported Content
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" name="action" value="resolve" class="btn btn-danger mt-2">
+                                    Apply Resolution
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{% url 'admin_reports_list' %}" class="btn btn-secondary">Back to Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

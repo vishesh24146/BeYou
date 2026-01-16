@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>
+                    <i class="fas fa-link"></i> 
+                    {% if conversation.conversation_type == 'group' %}
+                        Group: {{ conversation.name }}
+                    {% else %}
+                        Direct Conversation
+                    {% endif %}
+                </h4>
+                <div>
+                    <a href="{% url 'blockchain_explorer' %}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Explorer
+                    </a>
+                    <a href="{% url 'populate_blockchain' %}?next={% url 'conversation_blockchain' conversation.id %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sync-alt"></i> Refresh & Populate
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Dashboard -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Blocks</h5>
+                            <p class="display-4">{{ total_blocks }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Messages</h5>
+                            <p class="display-4">{{ integrity_results.total_messages }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Verified</h5>
+                            <p class="display-4">{{ integrity_results.verified_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card {% if integrity_results.unverified_count == 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Integrity Issues</h5>
+                            <p class="display-4">{{ integrity_results.unverified_count }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab navigation -->
+            <ul class="nav nav-tabs" id="conversationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="blocks-tab" data-bs-toggle="tab" data-bs-target="#blocks" type="button" role="tab">
+                        Blockchain Blocks
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="integrity-tab" data-bs-toggle="tab" data-bs-target="#integrity" type="button" role="tab">
+                        Integrity Report
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab content -->
+            <div class="tab-content" id="conversationTabContent">
+                <!-- Blocks Tab -->
+                <div class="tab-pane fade show active" id="blocks" role="tabpanel">
+                    <div class="blockchain-container mt-3">
+                        {% for block in blockchain_data reversed %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Block #{{ block.index }}</h5>
+                                <span class="text-muted">{{ block.timestamp|date:"F j, Y, g:i a" }}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Hash:</strong> 
+                                            <code class="text-success">{{ block.hash }}</code>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Previous Hash:</strong> 
+                                            <code class="text-primary">{{ block.previous_hash }}</code>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Nonce:</strong> {{ block.nonce }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if block.data.messages %}
+                                        <div class="mb-2">
+                                            <strong>Messages:</strong> {{ block.data.messages|length }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                {% if block.data.messages %}
+                                <div class="mt-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Message ID</th>
+                                                    <th>Sender</th>
+                                                    <th>Content Hash</th>
+                                                    <th>Features</th>
+                                                    <th>Timestamp</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for message in block.data.messages %}
+                                                <tr>
+                                                    <td><code class="small">{{ message.message_id }}</code></td>
+                                                    <td>{{ message.sender_username }}</td>
+                                                    <td><code class="small">{{ message.content_hash }}</code></td>
+                                                    <td>
+                                                        {% if message.has_signature %}
+                                                            <span class="badge bg-success">Signed</span>
+                                                        {% endif %}
+                                                        {% if message.is_encrypted %}
+                                                            <span class="badge bg-info">E2E Encrypted</span>
+                                                        {% endif %}
+                                                        {% if message.media_type != 'none' %}
+                                                            <span class="badge bg-warning">{{ message.media_type }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ message.timestamp|date:"F j, Y, g:i a" }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            No blocks found for this conversation in the blockchain.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Integrity Report Tab -->
+                <div class="tab-pane fade" id="integrity" role="tabpanel">
+                    <div class="mt-3">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Message Integrity Report</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body text-center py-3">
+                                                <h6 class="card-title">Verified Messages</h6>
+                                                <p class="mb-0 fs-4">{{ integrity_results.verified_count }} / {{ integrity_results.total_messages }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-danger text-white">
+                                            <div class="card-body text-center py-3">
+                                                <h6 class="card-title">Integrity Issues</h6>
+                                                <p class="mb-0 fs-4">{{ integrity_results.unverified_count }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-warning text-dark">
+                                            <div class="card-body text-center py-3">
+                                                <h6 class="card-title">Not in Blockchain</h6>
+                                                <p class="mb-0 fs-4">{{ integrity_results.missing_from_blockchain }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Message ID</th>
+                                                <th>Status</th>
+                                                <th>Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for detail in integrity_results.details %}
+                                            <tr>
+                                                <td><code>{{ detail.message_id }}</code></td>
+                                                <td>
+                                                    {% if detail.status == 'verified' %}
+                                                        <span class="badge bg-success">Verified</span>
+                                                    {% elif detail.status == 'integrity_failed' %}
+                                                        <span class="badge bg-danger">Integrity Failed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Not in Blockchain</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if detail.status == 'verified' %}
+                                                        <span class="text-success"><i class="fas fa-check-circle"></i> Message integrity verified against blockchain</span>
+                                                    {% elif detail.status == 'integrity_failed' %}
+                                                        <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Message content does not match blockchain record</span>
+                                                    {% else %}
+                                                        <span class="text-warning"><i class="fas fa-info-circle"></i> Message not recorded in blockchain</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center">No message integrity details available</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ </div>
+ 
+ <script>
+ document.addEventListener('DOMContentLoaded', function() {
+    // Add refresh button functionality
+    document.getElementById('refreshConversation').addEventListener('click', function(e) {
+        e.preventDefault();
+        location.reload();
+    });
+ });
+ </script>
+ {% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <h2>My Sold Items</h2>
+    
+    {% if sold_items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Buyer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sold_items %}
+                        <tr>
+                            <td>{{ item.item_name }}</td>
+                            <td>${{ item.item_price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.item_price|multiply:item.quantity }}</td>
+                            <td>{{ item.order.user.username }}</td>
+                            <td>{{ item.order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if item.order.status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif item.order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending Payment</span>
+                                {% elif item.order.status == 'payment_initiated' %}
+                                    <span class="badge bg-info">Payment In Progress</span>
+                                {% elif item.order.status == 'shipped' %}
+                                    <span class="badge bg-primary">Shipped</span>
+                                {% elif item.order.status == 'delivered' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% elif item.order.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Sales Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3>{{ sold_items.count }}</h3>
+                                <p class="mb-0">Items Sold</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3>${{ total_revenue|floatformat:2 }}</h3>
+                                <p class="mb-0">Total Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3>{{ unique_buyers_count }}</h3>
+                                <p class="mb-0">Unique Buyers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You haven't sold any items yet. <a href="{% url 'add_item' %}">List an item</a> to start selling.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

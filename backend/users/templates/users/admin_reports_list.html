@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Moderation Dashboard: Reports</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">User Reports</h5>
+                    <p class="display-4">{{ user_reports_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Message Reports</h5>
+                    <p class="display-4">{{ message_reports_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Item Reports</h5>
+                    <p class="display-4">{{ item_reports_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <ul class="nav nav-tabs" id="reportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                Pending ({{ pending_reports.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="investigating-tab" data-bs-toggle="tab" data-bs-target="#investigating" type="button" role="tab">
+                Investigating ({{ investigating_reports.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="resolved-tab" data-bs-toggle="tab" data-bs-target="#resolved" type="button" role="tab">
+                Resolved ({{ resolved_reports.count }})
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="reportTabsContent">
+        <!-- Pending Reports Tab -->
+        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Reporter</th>
+                            <th>Reported</th>
+                            <th>Reason</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in pending_reports %}
+                        <tr>
+                            <td>{{ report.id }}</td>
+                            <td>{{ report.get_report_type_display }}</td>
+                            <td>{{ report.reporter.username }}</td>
+                            <td>
+                                {% if report.reported_user %}
+                                    {{ report.reported_user.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ report.reason|truncatechars:50 }}</td>
+                            <td>{{ report.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'admin_process_report' report.id %}" class="btn btn-sm btn-primary">Review</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No pending reports.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Investigating Reports Tab -->
+        <div class="tab-pane fade" id="investigating" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Reporter</th>
+                            <th>Reported</th>
+                            <th>Reason</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in investigating_reports %}
+                        <tr>
+                            <td>{{ report.id }}</td>
+                            <td>{{ report.get_report_type_display }}</td>
+                            <td>{{ report.reporter.username }}</td>
+                            <td>
+                                {% if report.reported_user %}
+                                    {{ report.reported_user.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ report.reason|truncatechars:50 }}</td>
+                            <td>{{ report.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'admin_process_report' report.id %}" class="btn btn-sm btn-primary">Review</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No reports under investigation.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Resolved Reports Tab -->
+        <div class="tab-pane fade" id="resolved" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Reporter</th>
+                            <th>Reported</th>
+                            <th>Status</th>
+                            <th>Action Taken</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in resolved_reports %}
+                        <tr>
+                            <td>{{ report.id }}</td>
+                            <td>{{ report.get_report_type_display }}</td>
+                            <td>{{ report.reporter.username }}</td>
+                            <td>
+                                {% if report.reported_user %}
+                                    {{ report.reported_user.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ report.get_status_display }}</td>
+                            <td>{{ report.action_taken|truncatechars:50 }}</td>
+                            <td>{{ report.updated_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'admin_process_report' report.id %}" class="btn btn-sm btn-secondary">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No resolved reports.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all tab elements
+        var tabTriggers = document.querySelectorAll('#reportTabs button[data-bs-toggle="tab"]');
+        
+        // Add click event listeners
+        tabTriggers.forEach(function(tabTrigger) {
+            tabTrigger.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Remove active class from all tabs
+                tabTriggers.forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Get target tab to show
+                var targetId = this.getAttribute('data-bs-target');
+                var targetPanel = document.querySelector(targetId);
+                
+                // Hide all tab panels
+                document.querySelectorAll('.tab-pane').forEach(function(panel) {
+                    panel.classList.remove('show', 'active');
+                });
+                
+                // Show target panel
+                targetPanel.classList.add('show', 'active');
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

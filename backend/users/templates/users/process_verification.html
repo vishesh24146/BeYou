@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Review Verification Request</h3>
+                    <a href="{% url 'admin_verification_list' %}" class="btn btn-sm btn-outline-secondary float-end">Back to List</a>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>User Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Username:</th>
+                                    <td>{{ user_to_verify.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ user_to_verify.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phone:</th>
+                                    <td>{{ user_to_verify.phone_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Registered:</th>
+                                    <td>{{ user_to_verify.date_joined|date:"F j, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Request Submitted:</th>
+                                    <td>{{ user_to_verify.verification_submitted_at|date:"F j, Y g:i a" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Verification Reason</h5>
+                            <div class="p-3 bg-light rounded">
+                                {{ user_to_verify.verification_reason|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>ID Document</h5>
+                        <div class="text-center">
+                            <img src="{{ user_to_verify.id_document.url }}" alt="ID Document" class="img-fluid img-thumbnail" style="max-height: 400px;">
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Admin Notes</label>
+                            <textarea name="notes" id="notes" rows="3" class="form-control"></textarea>
+                            <div class="form-text">Optional notes about this verification decision.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this verification request?');">
+                                Reject Verification
+                            </button>
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                Approve Verification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

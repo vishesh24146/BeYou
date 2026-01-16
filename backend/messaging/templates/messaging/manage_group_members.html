@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h4>Manage Group: {{ conversation.name }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Current Members</h5>
+                    <div class="list-group mb-4">
+                        {% for participant in participants %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if participant.user.profile_picture %}
+                                        <img src="{{ participant.user.profile_picture.url }}" class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                        <img src="/static/images/default_profile.png" class="rounded-circle me-2" width="40" height="40">
+                                    {% endif %}
+                                    {{ participant.user.username }}
+                                    {% if participant.is_admin %}
+                                        <span class="badge bg-primary ms-2">Admin</span>
+                                    {% endif %}
+                                    {% if participant.user == request.user %}
+                                        <span class="badge bg-secondary ms-2">You</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if participant.user != request.user %}
+                                        {% if not participant.is_admin %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="make_admin">
+                                                <input type="hidden" name="user_id" value="{{ participant.user.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Make Admin</button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="{% url 'remove_from_group' conversation.id participant.user.id %}" class="btn btn-sm btn-outline-danger ms-2">Remove</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Add Members</h5>
+                    {% if available_friends %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add_members">
+                            
+                            <div class="form-group mb-3">
+                                <label>Select friends to add:</label>
+                                <div class="border p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                                    {% for friend in available_friends %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="friends" value="{{ friend.id }}" id="friend-{{ friend.id }}">
+                                            <label class="form-check-label" for="friend-{{ friend.id }}">
+                                                {{ friend.username }}
+                                                {% if friend.is_verified %}
+                                                    <span class="badge bg-success">Verified</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Add Selected Friends</button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No more friends available to add to this group.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'view_conversation' conversation.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Conversation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

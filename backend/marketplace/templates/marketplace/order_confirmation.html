@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header text-center">
+            {% if order.status == 'paid' %}
+                <h2 class="text-success">
+                    <i class="bi bi-check-circle-fill"></i> Order Confirmed
+                </h2>
+            {% elif order.status == 'pending' %}
+                <h2 class="text-warning">
+                    <i class="bi bi-exclamation-circle-fill"></i> Payment Required
+                </h2>
+            {% elif order.status == 'payment_initiated' %}
+                <h2 class="text-info">
+                    <i class="bi bi-info-circle-fill"></i> Payment In Progress
+                </h2>
+            {% elif order.status == 'shipped' %}
+                <h2 class="text-primary">
+                    <i class="bi bi-truck"></i> Order Shipped
+                </h2>
+            {% elif order.status == 'delivered' %}
+                <h2 class="text-success">
+                    <i class="bi bi-check-circle-fill"></i> Order Delivered
+                </h2>
+            {% elif order.status == 'cancelled' %}
+                <h2 class="text-danger">
+                    <i class="bi bi-x-circle-fill"></i> Order Cancelled
+                </h2>
+            {% endif %}
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h4>Order Details</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>Order ID:</th>
+                                <td>{{ order.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Order Date:</th>
+                                <td>{{ order.created_at|date:"F j, Y, g:i a" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    {% if order.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending Payment</span>
+                                    {% elif order.status == 'payment_initiated' %}
+                                        <span class="badge bg-info">Payment In Progress</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span class="badge bg-primary">Shipped</span>
+                                    {% elif order.status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Shipping Address:</th>
+                                <td>{{ order.shipping_address }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Amount:</th>
+                                <td>${{ order.total_price }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    {% if payment %}
+                        <h4 class="mt-4">Payment Information</h4>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tr>
+                                    <th>Payment Method:</th>
+                                    <td>
+                                        {% if payment.payment_method == 'credit_card' %}
+                                            Credit Card
+                                        {% elif payment.payment_method == 'debit_card' %}
+                                            Debit Card
+                                        {% elif payment.payment_method == 'net_banking' %}
+                                            Net Banking
+                                        {% elif payment.payment_method == 'wallet' %}
+                                            Digital Wallet
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Status:</th>
+                                    <td>
+                                        {% if payment.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif payment.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif payment.status == 'processing' %}
+                                            <span class="badge bg-info">Processing</span>
+                                        {% elif payment.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% elif payment.status == 'refunded' %}
+                                            <span class="badge bg-secondary">Refunded</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if payment.card_number_last4 %}
+                                    <tr>
+                                        <th>Card:</th>
+                                        <td>xxxx xxxx xxxx {{ payment.card_number_last4 }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if payment.transaction_id %}
+                                    <tr>
+                                        <th>Transaction ID:</th>
+                                        <td>{{ payment.transaction_id }}</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Payment Date:</th>
+                                    <td>{{ payment.created_at|date:"F j, Y, g:i a" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    {% elif order.status == 'pending' %}
+                        <div class="alert alert-warning mt-4">
+                            <h5>Payment Required</h5>
+                            <p>Your order has been created, but payment is pending.</p>
+                            <a href="{% url 'payment' order.id %}" class="btn btn-primary">Proceed to Payment</a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4">
+                    <h4>Items Ordered</h4>
+                    <div class="list-group">
+                        {% for item in order.items.all %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <h6>{{ item.item_name }}</h6>
+                                    <span>${{ item.item_price }}</span>
+                                </div>
+                                <p class="mb-1">Quantity: {{ item.quantity }}</p>
+                                <p class="mb-0 text-muted">Seller: {{ item.seller.username }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h5>Total:</h5>
+                                <h5>${{ order.total_price }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer text-center">
+            <a href="{% url 'my_orders' %}" class="btn btn-primary">View All Orders</a>
+            <a href="{% url 'marketplace_home' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

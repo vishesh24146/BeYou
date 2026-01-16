@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <h2>Payment</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+                        
+                        <!-- Order Summary -->
+                        <div class="mb-4">
+                            <h6>Order Summary</h6>
+                            <p><strong>Order ID:</strong> {{ order.id }}</p>
+                            <p><strong>Total Amount:</strong> ${{ order.total_price }}</p>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div class="mb-4">
+                            <h6>Payment Method</h6>
+                            <div class="mb-3">
+                                {{ form.payment_method.label_tag }}
+                                {{ form.payment_method }}
+                                {% if form.payment_method.errors %}
+                                    <div class="text-danger">{{ form.payment_method.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Credit Card Details -->
+                        <div id="card-details">
+                            <h6>Card Details</h6>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.card_number.id_for_label }}" class="form-label">Card Number</label>
+                                {{ form.card_number }}
+                                {% if form.card_number.errors %}
+                                    <div class="text-danger">{{ form.card_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label">Expiration Date</label>
+                                    <div class="input-group">
+                                        {{ form.card_expiry_month }}
+                                        <span class="input-group-text">/</span>
+                                        {{ form.card_expiry_year }}
+                                    </div>
+                                    {% if form.card_expiry_month.errors %}
+                                        <div class="text-danger">{{ form.card_expiry_month.errors }}</div>
+                                    {% endif %}
+                                    {% if form.card_expiry_year.errors %}
+                                        <div class="text-danger">{{ form.card_expiry_year.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <label for="{{ form.card_cvv.id_for_label }}" class="form-label">CVV</label>
+                                    {{ form.card_cvv }}
+                                    {% if form.card_cvv.errors %}
+                                        <div class="text-danger">{{ form.card_cvv.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <small>
+                                <strong>Note:</strong> This is a simulation. No real payment will be processed, and no card data will be stored.
+                                <br>Any valid-looking card information will be accepted for demo purposes.
+                            </small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'checkout' %}" class="btn btn-outline-secondary">Back to Checkout</a>
+                            <button type="submit" class="btn btn-success" id="pay-button">Pay ${{ order.total_price }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order ID:</strong><br>{{ order.id }}</p>
+                    <p><strong>Date:</strong><br>{{ order.created_at|date:"F j, Y" }}</p>
+                    <p><strong>Shipping Address:</strong><br>{{ order.shipping_address }}</p>
+                    
+                    <hr>
+                    
+                    <h6>Items</h6>
+                    <ul class="list-group mb-3">
+                        {% for item in order.items.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ item.item_name }} x {{ item.quantity }}
+                                <span>${{ item.item_price }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <div class="d-flex justify-content-between">
+                        <h5>Total:</h5>
+                        <h5>${{ order.total_price }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentMethodSelect = document.getElementById('{{ form.payment_method.id_for_label }}');
+        const cardDetailsSection = document.getElementById('card-details');
+        
+        // Show/hide card details based on payment method
+        function toggleCardDetails() {
+            if (paymentMethodSelect.value === 'credit_card' || paymentMethodSelect.value === 'debit_card') {
+                cardDetailsSection.style.display = 'block';
+            } else {
+                cardDetailsSection.style.display = 'none';
+            }
+        }
+        
+        paymentMethodSelect.addEventListener('change', toggleCardDetails);
+        toggleCardDetails();
+        
+        // Add loading state to pay button when form is submitted
+        const paymentForm = document.getElementById('payment-form');
+        const payButton = document.getElementById('pay-button');
+        
+        paymentForm.addEventListener('submit', function() {
+            payButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            payButton.disabled = true;
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

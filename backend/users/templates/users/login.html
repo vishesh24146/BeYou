@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Login</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                    
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                    
+                        <div class="mb-3">
+                            {{ form.username.label_tag }}
+                            {{ form.username }}
+                            {% for error in form.username.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    
+                        <div class="mb-3">
+                            {{ form.password.label_tag }}
+                            {{ form.password }}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    
+                        <div class="mb-3">
+                            {{ form.captcha.label_tag }}
+                            {{ form.captcha }}
+                            {% for error in form.captcha.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                    
+                </div>
+                <div class="card-footer text-center">
+                  
+                        <small> Forgot your password ?   <a href="{% url 'password_reset_request' %}">     Reset here !!</a></small>
+                    
+                </div>
+                <div class="card-footer text-center">
+                    <small>Don't have an account? <a href="{% url 'register' %}">  Register</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Setup Two-Factor Authentication</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <p><strong>Step 1:</strong> Scan the QR code below with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)</p>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid">
+                    </div>
+                    
+                    <div class="alert alert-secondary">
+                        <p><strong>Step 2:</strong> Enter the 6-digit verification code from your authenticator app to verify setup:</p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="verification_code" class="form-label">Verification Code:</label>
+                            <input type="text" name="verification_code" id="verification_code" maxlength="6" class="form-control form-control-lg text-center" required readonly>
+                            <!-- Virtual keyboard will appear here -->
+                            <div id="virtual-keyboard"></div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Verify and Enable 2FA</button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">Can't scan the QR code? Use this secret key instead: <strong>{{ secret }}</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inline CSS for Virtual Keyboard -->
+<style>
+    .virtual-keyboard {
+        width: 100%;
+        max-width: 300px;
+        margin: 1rem auto;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+    }
+
+    .keyboard-display {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .keyboard-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #0d6efd;
+        margin: 0 5px;
+        transition: background-color 0.2s;
+    }
+
+    .keyboard-dot-filled {
+        background-color: #0d6efd;
+    }
+
+    .keyboard-keys {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .keyboard-key {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        font-size: 1.25rem;
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .keyboard-key:hover {
+        background-color: #e9ecef;
+    }
+
+    .keyboard-key:active {
+        background-color: #ced4da;
+    }
+
+    .keyboard-key-wide {
+        grid-column: span 3;
+        background-color: #e9ecef;
+    }
+
+    @media (max-width: 576px) {
+        .virtual-keyboard {
+            max-width: 100%;
+        }
+        
+        .keyboard-key {
+            padding: 15px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Inline JavaScript for Virtual Keyboard -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputElement = document.getElementById('verification_code');
+        const keyboardContainer = document.getElementById('virtual-keyboard');
+        
+        let currentValue = '';
+        const maxLength = 6;
+        
+        // Create keyboard UI
+        function createKeyboard() {
+            // Create main container
+            const keyboard = document.createElement('div');
+            keyboard.className = 'virtual-keyboard';
+            
+            // Create display for dots
+            const display = document.createElement('div');
+            display.className = 'keyboard-display';
+            
+            // Add dots for each digit
+            for (let i = 0; i < maxLength; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'keyboard-dot';
+                dot.setAttribute('data-index', i);
+                display.appendChild(dot);
+            }
+            
+            keyboard.appendChild(display);
+            
+            // Create keys container
+            const keysContainer = document.createElement('div');
+            keysContainer.className = 'keyboard-keys';
+            
+            // Shuffle numbers
+            let digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+            digits = shuffleArray(digits);
+            
+            // Add number buttons
+            digits.forEach(digit => {
+                const key = document.createElement('button');
+                key.type = 'button';
+                key.className = 'keyboard-key';
+                key.textContent = digit;
+                key.addEventListener('click', () => addDigit(digit));
+                keysContainer.appendChild(key);
+            });
+            
+            // Add backspace button
+            const backspaceKey = document.createElement('button');
+            backspaceKey.type = 'button';
+            backspaceKey.className = 'keyboard-key keyboard-key-wide';
+            backspaceKey.innerHTML = 'Backspace';
+            backspaceKey.addEventListener('click', removeDigit);
+            keysContainer.appendChild(backspaceKey);
+            
+            keyboard.appendChild(keysContainer);
+            keyboardContainer.appendChild(keyboard);
+        }
+        
+        // Function to add a digit
+        function addDigit(digit) {
+            if (currentValue.length < maxLength) {
+                currentValue += digit;
+                inputElement.value = currentValue;
+                updateDisplay();
+            }
+        }
+        
+        // Function to remove a digit
+        function removeDigit() {
+            if (currentValue.length > 0) {
+                currentValue = currentValue.slice(0, -1);
+                inputElement.value = currentValue;
+                updateDisplay();
+            }
+        }
+        
+        // Function to update the dots display
+        function updateDisplay() {
+            const dots = document.querySelectorAll('.keyboard-dot');
+            dots.forEach((dot, index) => {
+                if (index < currentValue.length) {
+                    dot.classList.add('keyboard-dot-filled');
+                } else {
+                    dot.classList.remove('keyboard-dot-filled');
+                }
+            });
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Initialize the keyboard
+        createKeyboard();
+    });
+</script>
+{% endblock %}

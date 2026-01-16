@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h4><i class="fas fa-key"></i> Your Private Keys</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle"></i> IMPORTANT: Save Your Private Keys Now</h5>
+                <p>This is the <strong>only time</strong> you will see your private keys. They are not stored on the server.</p>
+                <p>Download or copy them to a secure location immediately. You will need them for secure messaging.</p>
+            </div>
+            
+            <div class="mb-4">
+                <h5>Signing Private Key</h5>
+                <div class="bg-light p-3 rounded">
+                    <pre id="signing-key-content" class="mb-0"><code>{{ signing_private_key }}</code></pre>
+                </div>
+                <button id="copy-signing-key" class="btn btn-sm btn-outline-primary mt-2">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <h5>Encryption Private Key</h5>
+                <div class="bg-light p-3 rounded">
+                    <pre id="encryption-key-content" class="mb-0"><code>{{ encryption_private_key }}</code></pre>
+                </div>
+                <button id="copy-encryption-key" class="btn btn-sm btn-outline-primary mt-2">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <button id="download-keys-button" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download Keys as File
+                </button>
+                
+                <a href="{% url 'logout' %}" class="btn btn-success">
+                    <i class="fas fa-check"></i> I've Saved My Keys
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Copy signing key button
+    document.getElementById('copy-signing-key').addEventListener('click', function() {
+        var keyText = document.getElementById('signing-key-content').textContent;
+        copyTextToClipboard(keyText, 'Signing key');
+    });
+    
+    // Copy encryption key button
+    document.getElementById('copy-encryption-key').addEventListener('click', function() {
+        var keyText = document.getElementById('encryption-key-content').textContent;
+        copyTextToClipboard(keyText, 'Encryption key');
+    });
+    
+    // Download keys button
+    document.getElementById('download-keys-button').addEventListener('click', function() {
+        downloadKeysAsFile();
+    });
+    
+    // Function to copy text to clipboard
+    function copyTextToClipboard(text, keyName) {
+        // Create a temporary textarea element
+        var textarea = document.createElement('textarea');
+        textarea.textContent = text;
+        textarea.style.position = 'fixed';  // Prevent scrolling to bottom
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            // Execute copy command
+            var success = document.execCommand('copy');
+            if (success) {
+                alert(keyName + ' copied to clipboard!');
+            } else {
+                alert('Failed to copy ' + keyName);
+            }
+        } catch (err) {
+            console.error('Error copying text: ', err);
+            alert('Failed to copy ' + keyName);
+        }
+        
+        // Clean up
+        document.body.removeChild(textarea);
+    }
+    
+    // Function to download keys as file
+    function downloadKeysAsFile() {
+        var signingKey = document.getElementById('signing-key-content').textContent;
+        var encryptionKey = document.getElementById('encryption-key-content').textContent;
+        
+        var fileContent = "# PRIVATE KEYS - KEEP SECURE\n\n" +
+                         "# Signing Private Key\n" + 
+                         signingKey + "\n\n" +
+                         "# Encryption Private Key\n" + 
+                         encryptionKey;
+        
+        // Create a blob with the text content
+        var blob = new Blob([fileContent], {type: 'text/plain'});
+        
+        // Create a temporary link for download
+        var downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'my_private_keys.txt';
+        
+        // Append link to body (required for Firefox)
+        document.body.appendChild(downloadLink);
+        
+        // Programmatically click the link to trigger download
+        downloadLink.click();
+        
+        // Clean up
+        document.body.removeChild(downloadLink);
+        setTimeout(function() {
+            URL.revokeObjectURL(downloadLink.href);
+        }, 100);
+        
+        alert('Keys file downloaded successfully!');
+    }
+});
+</script>
+{% endblock %}

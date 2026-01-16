@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h4>Report Message</h4>
+        </div>
+        <div class="card-body">
+            <p>Please provide details about why you're reporting this message. Your report will be reviewed by our team.</p>
+            
+            <div class="mb-4 p-3 bg-light">
+                <h6>Message details:</h6>
+                <p><strong>From:</strong> {{ message.sender.username }}</p>
+                <p><strong>Date:</strong> {{ message.created_at }}</p>
+                {% if message.is_media_message %}
+                <p><strong>Contains:</strong> {{ message.get_media_type_display }}</p>
+                {% endif %}
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for reporting:</label>
+                    {{ form.reason }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.additional_details.id_for_label }}" class="form-label">Additional details:</label>
+                    {{ form.additional_details }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.screenshot.id_for_label }}" class="form-label">Upload evidence (optional):</label>
+                    {{ form.screenshot }}
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-warning">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
