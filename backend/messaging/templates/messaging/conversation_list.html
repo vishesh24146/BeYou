@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Messages</h2>
+        <div>
+            {% if request.user.is_verified %}
+                <a href="{% url 'create_group' %}" class="btn btn-primary">
+                    <i class="fas fa-users me-1"></i> New Group
+                </a>
+            {% else %}
+                <a href="{% url 'verification_request' %}" class="btn btn-outline-warning">
+                    <i class="fas fa-id-card me-1"></i> Verify Account
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not conversations %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> You don't have any conversations yet. Start chatting with your friends or create a group.
+        </div>
+    {% else %}
+        <ul class="nav nav-tabs mb-3" id="convoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="direct-tab" data-bs-toggle="tab" data-bs-target="#direct" type="button" role="tab" aria-controls="direct" aria-selected="true">
+                    <i class="fas fa-user me-1"></i> Direct Messages
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="group-tab" data-bs-toggle="tab" data-bs-target="#group" type="button" role="tab" aria-controls="group" aria-selected="false">
+                    <i class="fas fa-users me-1"></i> Group Chats
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="convoTabsContent">
+            <!-- Direct Messages Tab -->
+            <div class="tab-pane fade show active" id="direct" role="tabpanel" aria-labelledby="direct-tab">
+                <div class="list-group shadow-sm">
+                    {% for convo in conversations %}
+                        {% if not convo.conversation.is_group %}
+                            <a href="{% url 'view_conversation' convo.conversation.id %}" class="list-group-item list-group-item-action {% if convo.unread_count > 0 %}fw-bold{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        {% if convo.other_user.profile_picture %}
+                                            <img src="{{ convo.other_user.profile_picture.url }}" class="rounded-circle me-3" width="48" height="48" alt="Profile picture">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <span class="fs-4">{{ convo.other_user.username|first|upper }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-1">{{ convo.other_user.username }}</h5>
+                                            {% if convo.last_message %}
+                                                <p class="mb-1 text-truncate" style="max-width: 300px;">
+                                                    {% if convo.last_message.sender == request.user %}
+                                                        <span class="text-muted">You: </span>
+                                                    {% endif %}
+                                                    {% if convo.last_message.is_media_message %}
+                                                        <i class="fas fa-{% if convo.last_message.is_image %}image{% else %}video{% endif %} me-1"></i>
+                                                        {% if convo.last_message.is_image %}Photo{% else %}Video{% endif %}
+                                                    {% else %}
+                                                        {{ convo.last_message.content|truncatechars:40 }}
+                                                    {% endif %}
+                                                </p>
+                                            {% else %}
+                                                <p class="mb-1 text-muted">No messages yet</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            {% if convo.last_message %}
+                                                {{ convo.last_message.created_at|date:"M d" }}
+                                                {% if convo.last_message.created_at|date:"Y-m-d" == now|date:"Y-m-d" %}
+                                                    {{ convo.last_message.created_at|time:"g:i A" }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
+                                        {% if convo.unread_count > 0 %}
+                                            <div class="badge bg-primary rounded-pill mt-1">{{ convo.unread_count }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% empty %}
+                        <div class="list-group-item text-center text-muted py-4">
+                            <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                            <p>No direct messages yet</p>
+                            <a href="{% url 'friend_list' %}" class="btn btn-sm btn-outline-primary">
+                                Find friends to message
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Group Chats Tab -->
+            <div class="tab-pane fade" id="group" role="tabpanel" aria-labelledby="group-tab">
+                <div class="list-group shadow-sm">
+                    {% for convo in conversations %}
+                        {% if convo.conversation.is_group %}
+                            <a href="{% url 'view_conversation' convo.conversation.id %}" class="list-group-item list-group-item-action {% if convo.unread_count > 0 %}fw-bold{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">{{ convo.conversation.name }}</h5>
+                                            <p class="mb-1 text-muted small">
+                                                {{ convo.conversation.participants.count }} members
+                                                {% if convo.last_message %}
+                                                    • Last active: {{ convo.last_message.created_at|date:"M d, g:i A" }}
+                                                {% endif %}
+                                            </p>
+                                            {% if convo.last_message %}
+                                                <p class="mb-1 text-truncate" style="max-width: 300px;">
+                                                    <strong>{{ convo.last_message.sender.username }}: </strong>
+                                                    {% if convo.last_message.is_media_message %}
+                                                        <i class="fas fa-{% if convo.last_message.is_image %}image{% else %}video{% endif %} me-1"></i>
+                                                        {% if convo.last_message.is_image %}Photo{% else %}Video{% endif %}
+                                                    {% else %}
+                                                        {{ convo.last_message.content|truncatechars:30 }}
+                                                    {% endif %}
+                                                </p>
+                                            {% else %}
+                                                <p class="mb-1 text-muted">No messages yet</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if convo.unread_count > 0 %}
+                                            <div class="badge bg-primary rounded-pill">{{ convo.unread_count }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% empty %}
+                        <div class="list-group-item text-center text-muted py-4">
+                            <i class="fas fa-users-slash fa-2x mb-2"></i>
+                            <p>No group chats yet</p>
+                            {% if request.user.is_verified %}
+                                <a href="{% url 'create_group' %}" class="btn btn-sm btn-outline-primary">
+                                    Create a group
+                                </a>
+                            {% else %}
+                                <div class="alert alert-warning mt-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> You need to verify your account to create groups.
+                                    <a href="{% url 'verification_request' %}" class="alert-link">Verify now</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if not request.user.is_verified %}
+        <div class="alert alert-warning mt-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                <div>
+                    <h5>Account not verified</h5>
+                    <p class="mb-2">Verify your account to create group chats and send media in messages.</p>
+                    <a href="{% url 'verification_request' %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-id-card me-1"></i> Verify Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all tab elements
+        var tabTriggers = document.querySelectorAll('#convoTabs button[data-bs-toggle="tab"]');
+        
+        // Add click event listeners
+        tabTriggers.forEach(function(tabTrigger) {
+            tabTrigger.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Remove active class from all tabs
+                tabTriggers.forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Get target tab to show
+                var targetId = this.getAttribute('data-bs-target');
+                var targetPanel = document.querySelector(targetId);
+                
+                // Hide all tab panels
+                document.querySelectorAll('.tab-pane').forEach(function(panel) {
+                    panel.classList.remove('show', 'active');
+                });
+                
+                // Show target panel
+                targetPanel.classList.add('show', 'active');
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

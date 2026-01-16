@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Verification Requests</h2>
+    
+    <ul class="nav nav-tabs" id="verificationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                Pending Verification ({{ pending_requests.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="processed-tab" data-bs-toggle="tab" data-bs-target="#processed" type="button" role="tab">
+                Processed ({{ processed_requests.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="not-submitted-tab" data-bs-toggle="tab" data-bs-target="#not-submitted" type="button" role="tab">
+                Not Submitted ({{ not_submitted_users.count }})
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="verificationTabsContent">
+        <!-- Pending Requests Tab -->
+        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Submitted</th>
+                            <th>Document</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in pending_requests %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>{{ user.verification_submitted_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if user.id_document %}
+                                <a href="{{ user.id_document.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-id-card me-1"></i> View ID
+                                </a>
+                                {% else %}
+                                <span class="text-muted">No document</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.verification_reason|truncatechars:50 }}</td>
+                            <td>
+                                <a href="{% url 'process_verification' user.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-check-circle me-1"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No pending verification requests.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Processed Requests Tab -->
+        <div class="tab-pane fade" id="processed" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Processed</th>
+                            <th>Document</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in processed_requests %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.verification_status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif user.verification_status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.verification_submitted_at|date:"M d, Y" }}</td>
+                            <td>{{ user.verification_processed_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if user.id_document %}
+                                <a href="{{ user.id_document.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-id-card me-1"></i> View ID
+                                </a>
+                                {% else %}
+                                <span class="text-muted">No document</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.verification_notes|truncatechars:50|default:"No notes" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No processed verification requests.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Not Submitted Tab -->
+        <div class="tab-pane fade" id="not-submitted" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in not_submitted_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>{{ user.last_login|date:"M d, Y"|default:"Never" }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-clock me-1"></i> Request Not Sent Yet
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">All users have submitted verification requests.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all tab elements
+        var tabTriggers = document.querySelectorAll('#verificationTabs button[data-bs-toggle="tab"]');
+        
+        // Add click event listeners
+        tabTriggers.forEach(function(tabTrigger) {
+            tabTrigger.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Remove active class from all tabs
+                tabTriggers.forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Get target tab to show
+                var targetId = this.getAttribute('data-bs-target');
+                var targetPanel = document.querySelector(targetId);
+                
+                // Hide all tab panels
+                document.querySelectorAll('.tab-pane').forEach(function(panel) {
+                    panel.classList.remove('show', 'active');
+                });
+                
+                // Show target panel
+                targetPanel.classList.add('show', 'active');
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

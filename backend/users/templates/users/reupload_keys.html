@@ -1,0 +1,70 @@
+<!-- templates/users/reupload_keys.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-key"></i> Re-upload Your Private Keys</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <p>Please upload your previously downloaded private keys to enable secure messaging features.</p>
+                <p>Your keys will only be stored in your current session and will not be permanently saved on the server.</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="signing_key" class="form-label">Signing Private Key</label>
+                    <textarea id="signing_key" name="signing_key" class="form-control" rows="6" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="encryption_key" class="form-label">Encryption Private Key</label>
+                    <textarea id="encryption_key" name="encryption_key" class="form-control" rows="6" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="key_file" class="form-label">Or Upload Key File</label>
+                    <input type="file" id="key_file" class="form-control" accept=".txt">
+                    <div class="form-text">
+                        If you saved your keys as a file, you can upload it here and we'll extract the keys.
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'profile' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Upload Keys</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle key file upload
+document.getElementById('key_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        
+        // Try to extract the keys
+        const signingKeyMatch = content.match(/# Signing Private Key\s*\n(-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----)/m);
+        const encryptionKeyMatch = content.match(/# Encryption Private Key\s*\n(-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----)/m);
+        
+        if (signingKeyMatch && signingKeyMatch[1]) {
+            document.getElementById('signing_key').value = signingKeyMatch[1].trim();
+        }
+        
+        if (encryptionKeyMatch && encryptionKeyMatch[1]) {
+            document.getElementById('encryption_key').value = encryptionKeyMatch[1].trim();
+        }
+    };
+    reader.readAsText(file);
+});
+</script>
+{% endblock %}

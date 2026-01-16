@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Search & Filter</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="mb-3">
+                            {{ form.search_query }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Price Range</label>
+                            <div class="input-group mb-2">
+                                {{ form.min_price }}
+                                <span class="input-group-text">to</span>
+                                {{ form.max_price }}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Categories</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <a href="{% url 'marketplace_home' %}">All Categories</a>
+                        </li>
+                        {% for category in categories %}
+                            <li class="list-group-item">
+                                <a href="{% url 'marketplace_home' %}?category={{ category.id }}">{{ category.name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Marketplace</h2>
+                <div>
+                    <a href="{% url 'add_item' %}" class="btn btn-primary">Add Item</a>
+                    <a href="{% url 'view_cart' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-cart"></i> View Cart
+                    </a>
+                </div>
+            </div>
+
+            {% if items %}
+                <div class="row">
+                    {% for item in items %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary text-white d-flex justify-content-center align-items-center" style="height: 200px;">
+                                        <h3>No Image</h3>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.name }}</h5>
+                                    <p class="card-text text-truncate">{{ item.description }}</p>
+                                    <p class="card-text text-primary fw-bold">${{ item.price }}</p>
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        <a href="{% url 'add_to_cart' item.id %}" class="btn btn-sm btn-primary">Add to Cart</a>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted">
+                                    <small>Listed by {{ item.seller.username }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No items found. Try adjusting your search filters.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

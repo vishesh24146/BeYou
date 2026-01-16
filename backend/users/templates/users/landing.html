@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome to BeYou</h1>
+        <p class="lead">Connect with friends, share media, and buy/sell items in our marketplace</p>
+        <hr class="my-4">
+        <p>Join our growing community today!</p>
+        <div class="d-flex justify-content-center">
+            <a class="btn btn-primary btn-lg mr-2" href="{% url 'login' %}" role="button">Login</a>
+            <a class="btn btn-success btn-lg ml-2" href="{% url 'register' %}" role="button">Register</a>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill fs-1 text-primary"></i>
+                    <h3 class="card-title mt-3">Friends</h3>
+                    <p class="card-text">Connect with friends and build your social network.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-fill fs-1 text-primary"></i>
+                    <h3 class="card-title mt-3">Messaging</h3>
+                    <p class="card-text">Send direct messages and create group conversations.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-shop fs-1 text-primary"></i>
+                    <h3 class="card-title mt-3">Marketplace</h3>
+                    <p class="card-text">Buy and sell items in our secure marketplace.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

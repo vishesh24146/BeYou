@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header">
+            <h4>Generate Cryptographic Keys</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Important Security Information</h5>
+                <p>You are about to generate cryptographic keys for message signing and encryption.</p>
+                <ul>
+                    <li>Your <strong>public keys</strong> will be stored on the server and shared with other users.</li>
+                    <li>Your <strong>private keys</strong> will be shown to you once and <strong>must be saved securely</strong>.</li>
+                    <li>Private keys will never be stored on the server after this page.</li>
+                    <li>If you lose your private keys, you won't be able to decrypt messages sent to you.</li>
+                </ul>
+                <p>In a real-world application, key generation would happen client-side in your browser for better security.</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="understand" required>
+                    <label class="form-check-label" for="understand">
+                        I understand that I need to securely store my private keys
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Generate Keys</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

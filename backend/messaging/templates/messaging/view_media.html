@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'conversation_list' %}">Messages</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'view_conversation' conversation.id %}">Conversation</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Media</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="card-body text-center">
+            <h5 class="card-title">
+                Shared by {{ message.sender.username }} on {{ message.created_at|date:"F j, Y H:i" }}
+            </h5>
+            
+            <div class="media-container my-4">
+                {% if message.media_type == 'image' %}
+                    <img src="{{ message.media_file.url }}" alt="Image" class="img-fluid rounded">
+                {% elif message.media_type == 'video' %}
+                    <div class="ratio ratio-16x9">
+                        <video controls>
+                            <source src="{{ message.media_file.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <a href="{% url 'view_conversation' conversation.id %}" class="btn btn-primary">Back to Conversation</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

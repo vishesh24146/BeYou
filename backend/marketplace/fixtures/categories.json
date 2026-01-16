@@ -1,0 +1,65 @@
+[
+    {
+      "model": "marketplace.category",
+      "pk": 1,
+      "fields": {
+        "name": "Electronics",
+        "description": "Electronic devices and gadgets",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 2,
+      "fields": {
+        "name": "Clothing",
+        "description": "Apparel, shoes, and accessories",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 3,
+      "fields": {
+        "name": "Books",
+        "description": "Books, textbooks, and educational materials",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 4,
+      "fields": {
+        "name": "Home & Garden",
+        "description": "Furniture, decor, and gardening supplies",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 5,
+      "fields": {
+        "name": "Sports & Outdoors",
+        "description": "Sports equipment and outdoor gear",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 6,
+      "fields": {
+        "name": "Toys & Games",
+        "description": "Toys, games, and entertainment",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    },
+    {
+      "model": "marketplace.category",
+      "pk": 7,
+      "fields": {
+        "name": "Beauty & Personal Care",
+        "description": "Cosmetics, skincare, and personal care items",
+        "created_at": "2023-01-01T12:00:00Z"
+      }
+    }
+  ]

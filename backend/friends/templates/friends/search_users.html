@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-search me-2"></i>Find People</h4>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-0">
+                        <div class="input-group">
+                            <input type="text" name="search_query" value="{{ request.GET.search_query }}" class="form-control form-control-lg" placeholder="Search by username or email">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Search
+                            </button>
+                        </div>
+                        <div class="form-text text-muted">
+                            Search by username, email, or name to find people to connect with
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if request.GET.search_query %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Results for "{{ request.GET.search_query }}"</h5>
+                    <span class="badge bg-secondary">{{ users|length }} found</span>
+                </div>
+            {% endif %}
+
+            {% if users %}
+                <div class="user-results">
+                    {% for user in users %}
+                        <div class="card hover-shadow border-0 shadow-sm mb-3">
+                            <div class="card-body p-0">
+                                <div class="d-flex p-3">
+                                    <!-- User Image -->
+                                    <div class="me-3">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ user.profile_picture.url }}" class="rounded-circle" width="64" height="64" style="object-fit: cover;" alt="{{ user.username }}'s profile">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                                <span class="fs-3">{{ user.username|first|upper }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- User Info -->
+                                    <div class="d-flex flex-column flex-grow-1 justify-content-center">
+                                        <div class="d-flex align-items-center">
+                                            <h5 class="mb-0">{{ user.username }}</h5>
+                                            {% if user.is_verified %}
+                                                <span class="ms-2 badge bg-info"><i class="fas fa-check-circle"></i> Verified</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if user.bio %}
+                                            <p class="text-muted small mb-0 mt-1">{{ user.bio|truncatechars:100 }}</p>
+                                        {% endif %}
+                                        <div class="mt-1 small text-muted">
+                                            <i class="fas fa-user-plus me-1"></i> Joined {{ user.date_joined|date:"M Y" }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="align-self-center ms-3">
+                                        <div class="btn-group">
+                                            {% if user_statuses|get_item:user.id == 'friend' %}
+                                                <a href="{% url 'start_conversation' user.id %}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-comment-dots me-1"></i> Message
+                                                </a>
+                                            {% elif user_statuses|get_item:user.id == 'pending_sent' %}
+                                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                    <i class="fas fa-clock me-1"></i> Request Sent
+                                                </button>
+                                            {% elif user_statuses|get_item:user.id == 'pending_received' %}
+                                                <a href="{% url 'accept_friend_request' user.received_requests.first.id %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check me-1"></i> Accept
+                                                </a>
+                                                <a href="{% url 'reject_friend_request' user.received_requests.first.id %}" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-times me-1"></i> Reject
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'send_friend_request' user.id %}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-user-plus me-1"></i> Add Friend
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <div class="dropdown ms-2">
+                                                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'profile' username=user.username %}">
+                                                            <i class="fas fa-user me-2 text-primary"></i> View Profile
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'block_user' user.id %}">
+                                                            <i class="fas fa-ban me-2"></i> Block User
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-warning" href="{% url 'report_user' user.id %}">
+                                                            <i class="fas fa-flag me-2"></i> Report User
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {% if request.GET.search_query %}
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h4>No users found matching "{{ request.GET.search_query }}"</h4>
+                            <p class="text-muted">Try using different keywords or search criteria</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                            <h4>Find friends to connect with</h4>
+                            <p class="text-muted">Enter a search term above to find users</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.card {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* For handling the search box better */
+.form-control-lg {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-primary {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+</style>
+{% endblock %}

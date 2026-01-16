@@ -1,0 +1,221 @@
+{% load alert_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeYou</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            padding-top: 56px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+            padding: 20px 0;
+        }
+        
+        .badge-notification {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50%;
+            background-color: red;
+            color: white;
+        }
+
+        .message-header .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .message-header .badge i {
+            margin-right: 0.25rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            {% if user.is_authenticated %}
+                <!-- When authenticated, make the logo/brand a logout link -->
+                <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+                    {% csrf_token %}
+                    <button type="submit" class="navbar-brand btn btn-link">BeYou</button>
+                </form>
+            {% else %}
+                <!-- When not authenticated, make it a regular link to home -->
+                <a class="navbar-brand" href="/">BeYou</a>
+            {% endif %}
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'friend_list' %}">Friends</a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'conversation_list' %}">Messages</a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'marketplace_home' %}">Marketplace</a>
+                        </li>
+                    {% endif %}
+
+                    {% if user.is_staff %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-shield-alt"></i> Admin
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'admin_reports_list' %}">
+                                    <i class="fas fa-flag"></i> Reports
+                                </a>
+                                <a class="dropdown-item" href="{% url 'admin_user_management' %}">
+                                    <i class="fas fa-users-cog"></i> User Management
+                                </a>
+                                <a class="dropdown-item" href="{% url 'admin_verification_list' %}">
+                                    <i class="fas fa-id-card"></i> Verification Requests
+                                </a>
+                                <a class="dropdown-item" href="{% url 'blockchain_explorer' %}">
+                                    <i class="fas fa-link"></i> Blockchain Explorer
+                                </a>
+                                <a class="dropdown-item" href="{% url 'login_logs' %}">
+                                    <i class="fas fa-user-shield"></i> Login Logs
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/admin/" target="_blank">
+                                    <i class="fas fa-tools"></i> Django Admin
+                                </a>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'notifications' %}">
+                                <i class="bi bi-bell"></i>
+                                {% if notification_count > 0 %}
+                                    <span class="badge-notification">{{ notification_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'view_cart' %}">
+                                <i class="bi bi-cart"></i>
+                                {% if cart_item_count > 0 %}
+                                    <span class="badge-notification">{{ cart_item_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                {{ user.username }}
+                                {% if not user.is_verified %}
+                                    <span class="text-warning"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'blocked_users' %}">
+                                    <i class="fas fa-ban"></i> Blocked Users
+                                </a></li>
+                    
+                                <li><a class="dropdown-item" href="{% url 'my_items' %}">My Items</a></li>
+                                <li><a class="dropdown-item" href="{% url 'my_orders' %}">My Orders</a></li>
+                                <li><a class="dropdown-item" href="{% url 'sold_items' %}">Sold Items</a></li>
+                                {% if not user.is_verified %}
+                                    <li><a class="dropdown-item text-warning" href="{% url 'verification_request' %}">Verify Account</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Container for Django messages/alerts -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|bootstrap_alert_class }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.is_mine %}
+                    <div class="message outgoing">
+                        {{ message.content }}
+                    </div>
+                    {% else %}
+                    <div class="message incoming">
+                        {{ message.content }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-3">
+        <div class="container text-center">
+            <p class="mb-0">&copy; {% now "Y" %} BeYou Platform. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

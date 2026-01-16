@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>User Management</h2>
+    
+    <ul class="nav nav-tabs" id="userTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="reported-tab" data-bs-toggle="tab" data-bs-target="#reported" type="button" role="tab">
+                Reported Users ({{ users_with_reports.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="banned-tab" data-bs-toggle="tab" data-bs-target="#banned" type="button" role="tab">
+                Banned Users ({{ banned_users.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent" type="button" role="tab">
+                Recent Signups ({{ recent_users.count }})
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="userTabsContent">
+        <!-- Reported Users Tab -->
+        <div class="tab-pane fade show active" id="reported" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Verified</th>
+                            <th>Reports</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_with_reports %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                {% if user.is_verified %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.reports_against.count }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_ban_user' user.id %}" class="btn btn-sm btn-danger">Ban</a>
+                                    <a href="/admin/users/customuser/{{ user.id }}/change/" class="btn btn-sm btn-primary" target="_blank">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No reported users.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Banned Users Tab -->
+        <div class="tab-pane fade" id="banned" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in banned_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>{{ user.last_login|default:"Never"|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_unban_user' user.id %}" class="btn btn-sm btn-success">Unban</a>
+                                    <a href="/admin/users/customuser/{{ user.id }}/change/" class="btn btn-sm btn-primary" target="_blank">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No banned users.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Recent Users Tab -->
+        <div class="tab-pane fade" id="recent" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Verified</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if user.is_verified %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    {% if not user.is_staff %}
+                                    <a href="{% url 'admin_ban_user' user.id %}" class="btn btn-sm btn-danger">Ban</a>
+                                    {% endif %}
+                                    <a href="/admin/users/customuser/{{ user.id }}/change/" class="btn btn-sm btn-primary" target="_blank">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No recent signups in the past 7 days.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all tab elements
+        var tabTriggers = document.querySelectorAll('#userTabs button[data-bs-toggle="tab"]');
+        
+        // Add click event listeners
+        tabTriggers.forEach(function(tabTrigger) {
+            tabTrigger.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                // Remove active class from all tabs
+                tabTriggers.forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Get target tab to show
+                var targetId = this.getAttribute('data-bs-target');
+                var targetPanel = document.querySelector(targetId);
+                
+                // Hide all tab panels
+                document.querySelectorAll('.tab-pane').forEach(function(panel) {
+                    panel.classList.remove('show', 'active');
+                });
+                
+                // Show target panel
+                targetPanel.classList.add('show', 'active');
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

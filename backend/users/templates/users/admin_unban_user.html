@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h4>Unban User: {{ user_to_unban.username }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h5>User Details</h5>
+                <table class="table">
+                    <tr>
+                        <th>Username:</th>
+                        <td>{{ user_to_unban.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ user_to_unban.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Joined:</th>
+                        <td>{{ user_to_unban.date_joined }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last login:</th>
+                        <td>{{ user_to_unban.last_login|default:"Never" }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p>Are you sure you want to unban this user? They will be able to log in and use the platform again.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'admin_user_management' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">Unban User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

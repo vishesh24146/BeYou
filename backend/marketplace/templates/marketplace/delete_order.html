@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3>Delete Order</h3>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete Order #{{ order.id|truncatechars:8 }}?</p>
+                    <p>This action cannot be undone. All items in this order will be returned to the marketplace.</p>
+                    
+                    <div class="mt-3">
+                        <strong>Order Details:</strong>
+                        <ul class="list-group mt-2 mb-3">
+                            <li class="list-group-item">Date: {{ order.created_at|date:"F j, Y" }}</li>
+                            <li class="list-group-item">Total: ${{ order.total_price }}</li>
+                            <li class="list-group-item">Status: <span class="badge bg-warning">Pending Payment</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'my_orders' %}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-danger">Delete Order</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

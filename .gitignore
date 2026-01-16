@@ -1,0 +1,30 @@
+# Environment variables
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Django
+staticfiles/
+media/
+
+# Virtual env
+venv/
+.env/
+.venv/
+
+
+# Ignore logs
+*.log
+
+# Ignore Docker and Python virtual environment files (if applicable)
+docker-compose.override.yml
+*.envrc
+.vscode/
+.idea/
+*.DS_Store

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Messages</h2>
+        {% if user.is_verified %}
+            <a href="{% url 'create_group' %}" class="btn btn-primary">Create Group</a>
+        {% endif %}
+    </div>
+
+    {% if not user.is_verified %}
+        <div class="alert alert-warning mb-4">
+            <p>You need to verify your account to create or join group conversations.</p>
+            <a href="{% url 'totp_setup' %}" class="btn btn-sm btn-outline-primary">Verify Account</a>
+        </div>
+    {% endif %}
+
+    {% if conversations %}
+        <div class="list-group">
+            {% for item in conversations %}
+                <a href="{% url 'view_conversation' item.conversation.id %}" class="list-group-item list-group-item-action {% if item.unread_count %}list-group-item-info{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if item.conversation.is_group %}
+                                <h5>{{ item.conversation.name }}</h5>
+                                <small class="text-muted">Group conversation</small>
+                            {% else %}
+                                <h5>{{ item.other_user.username }}</h5>
+                                <small class="text-muted">Direct message</small>
+                            {% endif %}
+                            
+                            {% if item.last_message %}
+                                <p class="mb-1 text-truncate" style="max-width: 300px;">
+                                    {% if item.last_message.sender == user %}
+                                        <em>You:</em>
+                                    {% else %}
+                                        <em>{{ item.last_message.sender.username }}:</em>
+                                    {% endif %}
+                                    {% if item.last_message.content == "[Encrypted message]" %}
+                                        [Encrypted message]
+                                    {% else %}
+                                        {{ item.last_message.content }}
+                                    {% endif %}
+                                </p>
+                                <small class="text-muted">{{ item.last_message.created_at|date:"M d, H:i" }}</small>
+                            {% else %}
+                                <p class="mb-1 text-muted">No messages yet</p>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.unread_count %}
+                            <span class="badge bg-primary rounded-pill">{{ item.unread_count }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You don't have any conversations yet. 
+            <a href="{% url 'friend_list' %}">Message a friend</a> to get started.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

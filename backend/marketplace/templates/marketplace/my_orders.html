@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <h2>My Orders</h2>
+    
+    <!-- Order instructions panel -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Order Status Guide</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><span class="badge bg-warning">Pending Payment</span></h6>
+                    <p>Your order is awaiting payment. Complete the payment to process your order.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6><span class="badge bg-success">Paid</span></h6>
+                    <p>Payment received. Your order is being prepared for shipping.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6><span class="badge bg-primary">Shipped</span></h6>
+                    <p>Your order is on the way to the delivery address you provided.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if orders %}
+        <div class="list-group mb-4">
+            {% for order in orders %}
+                <div class="list-group-item {% if order.status == 'paid' and order.updated_at|timesince|split:','|first == '0 minutes' %}border border-success{% endif %}">
+                    {% if order.status == 'paid' and order.updated_at|timesince|split:','|first == '0 minutes' %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill"></i> This order was just confirmed! Your items will be processed soon.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">Order #{{ order.id|truncatechars:8 }}</h5>
+                            <p class="mb-1">
+                                <strong>Date:</strong> {{ order.created_at|date:"M d, Y" }} |
+                                <strong>Total:</strong> ${{ order.total_price }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Status:</strong>
+                                {% if order.status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                    <small class="text-muted ms-2">Your order is confirmed and will be shipped soon.</small>
+                                {% elif order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending Payment</span>
+                                    <div class="btn-group mt-2">
+                                        <a href="{% url 'payment' order.id %}" class="btn btn-sm btn-outline-primary">Complete Payment</a>
+                                        <a href="{% url 'delete_order' order.id %}" class="btn btn-sm btn-outline-danger">Delete Order</a>
+                                    </div>
+                                {% elif order.status == 'payment_initiated' %}
+                                    <span class="badge bg-info">Payment In Progress</span>
+                                    <div class="mt-2">
+                                        <a href="{% url 'payment' order.id %}" class="btn btn-sm btn-outline-primary">Resume Payment</a>
+                                    </div>
+                                {% elif order.status == 'shipped' %}
+                                    <span class="badge bg-primary">Shipped</span>
+                                    <small class="text-muted ms-2">Your order is on its way!</small>
+                                {% elif order.status == 'delivered' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% elif order.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    <div class="mt-2">
+                                        <a href="{% url 'payment' order.id %}" class="btn btn-sm btn-outline-primary">Retry Payment</a>
+                                    </div>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'order_confirmation' order.id %}" class="btn btn-outline-primary">View Details</a>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <strong>Items:</strong>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                        <tr>
+                                            <td>{{ item.item_name }}</td>
+                                            <td>${{ item.item_price }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>${{ item.item_price|multiply:item.quantity }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You don't have any orders yet. <a href="{% url 'marketplace_home' %}">Start shopping</a> to place your first order.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
