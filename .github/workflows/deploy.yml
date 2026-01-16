@@ -22,25 +22,24 @@ jobs:
 
       - name: Deploy to VM
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
-          "bash -lc '
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} 'bash -s' << 'EOF'
             set -e
 
-            echo \"Connected to VM\"
+            echo "Connected to VM"
             whoami
             pwd
 
             cd ~/deployments/BeYou-main
 
-            echo \"Pulling latest code\"
+            echo "Pulling latest code"
             git pull origin main
 
-            echo \"Rebuilding containers\"
+            echo "Rebuilding containers"
             docker-compose build
 
-            echo \"Restarting containers\"
+            echo "Restarting containers"
             docker-compose down
             docker-compose up -d
 
-            echo \"Deployment finished successfully\"
-          '"
+            echo "Deployment finished successfully"
+          EOF
