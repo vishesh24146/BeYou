@@ -14,19 +14,14 @@ SECRET_KEY = 'django-insecure-hs88%e(wz^$8%b#jh=9)q9#k!cimzggveahcw5#l72%1sfv6#x
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 
-ALLOWED_HOSTS = ["102.37.145.100", "localhost", "127.0.0.1", "backend", "*.cloudapp.azure.com"]
+ALLOWED_HOSTS = ['*']
 
 AUTHENTICATION_BACKENDS = [
     'users.auth_backend.LoggingModelBackend',
     # 'django.contrib.auth.backends.ModelBackend',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://102.37.145.100",
-    "http://localhost:8000", 
-    "http://127.0.0.1:8000",
-    "http://102.37.145.100:8000",
-]
+CSRF_TRUSTED_ORIGINS = ['*']
 
 # Application definition
 
