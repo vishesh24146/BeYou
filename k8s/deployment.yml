@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beyou-app
+  labels:
+    app: beyou-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: beyou-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Create 1 new pod before removing old ones
+      maxUnavailable: 0  # Never remove old pods until new one is ready
+  template:
+    metadata:
+      labels:
+        app: beyou-app
+    spec:
+      containers:
+        - name: beyou-app
+          image: regvj.azurecr.io/myproject:IMAGE_TAG_PLACEHOLDER
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          env:
+            - name: DEBUG
+              value: "False"
+            # Add other environment variables as needed
+            # - name: ENCRYPTION_KEY
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: beyou-secrets
+            #       key: encryption-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beyou-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: beyou-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

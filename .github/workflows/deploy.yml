@@ -1,0 +1,66 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ACR_NAME: regvj
+  ACR_LOGIN_SERVER: regvj.azurecr.io
+  IMAGE_NAME: myproject
+  RESOURCE_GROUP: vjrg
+  CLUSTER_NAME: cluster1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Login to Azure
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 3: Login to ACR
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      # Step 4: Build and Push Docker image with unique tag
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG .
+          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest .
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+
+      # Step 5: Get AKS credentials
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --overwrite-existing
+
+      # Step 6: Update Kubernetes deployment with new image tag
+      - name: Deploy to AKS
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          
+          # Replace the image tag in deployment file
+          sed -i "s|IMAGE_TAG_PLACEHOLDER|$IMAGE_TAG|g" k8s/deployment.yml
+          
+          # Apply the deployment (RollingUpdate strategy ensures zero-downtime)
+          kubectl apply -f k8s/deployment.yml
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/beyou-app --timeout=300s
+
+      # Step 7: Verify deployment
+      - name: Verify deployment
+        run: |
+          kubectl get pods -l app=beyou-app
+          kubectl get svc beyou-service
