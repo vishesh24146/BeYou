@@ -28,3 +28,4 @@ docker-compose.override.yml
 .vscode/
 .idea/
 *.DS_Store
+k8s/secrets.yml

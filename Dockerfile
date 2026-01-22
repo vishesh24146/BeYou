@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Copy backend application
 COPY backend/ .
 
-# Copy .env file (QUICK FIX - bundle environment variables)
-COPY .env /app/.env
+# Environment variables will be passed via Kubernetes ConfigMap/Secrets
+# No .env file needed in the image
 
 # Copy nginx configuration
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf

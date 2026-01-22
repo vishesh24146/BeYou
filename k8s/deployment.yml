@@ -43,15 +43,11 @@ spec:
               port: 80
             initialDelaySeconds: 30
             periodSeconds: 10
-          env:
-            - name: DEBUG
-              value: "False"
-            # Add other environment variables as needed
-            # - name: ENCRYPTION_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: beyou-secrets
-            #       key: encryption-key
+          envFrom:
+            - configMapRef:
+                name: beyou-config
+            - secretRef:
+                name: beyou-secrets
 ---
 apiVersion: v1
 kind: Service
