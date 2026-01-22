@@ -54,4 +54,5 @@ RUN python manage.py collectstatic --noinput || true
 # 9. Expose port
 EXPOSE 8000
 
-# 10. Command will be set in docker-compose
+# 10. Run migrations and start server
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn social_media.wsgi:application --bind 0.0.0.0:8000"]
