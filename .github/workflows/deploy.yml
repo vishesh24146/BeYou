@@ -45,13 +45,7 @@ jobs:
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }} --overwrite-existing
 
-      # Step 6: Deploy ConfigMap and Secrets
-      - name: Deploy ConfigMap and Secrets
-        run: |
-          kubectl apply -f k8s/configmap.yml
-          kubectl apply -f k8s/secrets.yml
-
-      # Step 7: Update Kubernetes deployment with new image tag
+      # Step 6: Update Kubernetes deployment with new image tag
       - name: Deploy to AKS
         run: |
           IMAGE_TAG=${{ github.sha }}
@@ -65,7 +59,7 @@ jobs:
           # Wait for rollout to complete
           kubectl rollout status deployment/beyou-app --timeout=300s
 
-      # Step 8: Verify deployment
+      # Step 7: Verify deployment
       - name: Verify deployment
         run: |
           kubectl get pods -l app=beyou-app
